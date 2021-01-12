@@ -1,0 +1,6 @@
+In terminal: 
+	to run the server and view the ecommerce website...
+		run: python3 manage.py runserver
+		go to: http://127.0.0.1:8000
+		change pages by putting "/cart" or "/checkout" after the address
+
