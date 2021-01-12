@@ -20,10 +20,22 @@ class Product(models.Model):
 	# Boolean labels if product is digital or physical
 	# default=False means by default items are Physical
 	digital = models.BooleanField(default=False, null=True, blank=False)
-	#image
+	image = models.ImageField(null=True, blank=True)
 
 	def __str__(self):
 		return self.name
+
+	# part of Product
+	# Prevents error when no image file is found to display for a product
+	@property
+	def imageURL(self):
+		# product tries to look for its own image
+		try:
+			url = self.image.url
+		# if the try doesn't work, render an empty string
+		except:
+			url = ''
+		return url
 
 class Order(models.Model):
 	# Order has Many-To-One relationship with customers. customer can have multiple orders.
@@ -38,6 +50,24 @@ class Order(models.Model):
 	def __str__(self):
 		return str(self.id)
 
+	# Dynamically displays cart order total price
+	@property
+	def get_cart_total(self):
+		# gets all order items
+		orderitems = self.orderitem_set.all()
+		# runs a loop to go through each order item and add up a total
+		total = sum([item.get_total for item in orderitems])
+		return total
+
+	# Dynamically displays total number of cart items
+	@property
+	def get_cart_items(self):
+		# gets all order items
+		orderitems = self.orderitem_set.all()
+		# runs a loop to go through each order item and add up a total
+		total = sum([item.quantity for item in orderitems])
+		return total
+
 # OrderItem is an item within our cart; Many-To-One relationship: Cart can have multiple OrderItems
 class OrderItem(models.Model):
 	product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
@@ -45,6 +75,12 @@ class OrderItem(models.Model):
 	order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
 	quantity = models.IntegerField(default=0, null=True, blank=True)
 	date_added = models.DateTimeField(auto_now_add=True)
+
+	# Dynamically sets totals for items in cart
+	@property
+	def get_total(self):
+		total = self.product.price * self.quantity
+		return total
 
 class ShippingAddress(models.Model):
 	# Attatch shipping address to customer and order.

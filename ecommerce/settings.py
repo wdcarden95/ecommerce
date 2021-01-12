@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'store.apps.StoreConfig',
 ]
 
@@ -126,3 +126,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
+
+# Sets a path for images to be accessed by URL using [domain]/images/[file name]
+MEDIA_URL = '/images/'
+
+# Sends uploaded images to static images folder instead of root directory.
+MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
