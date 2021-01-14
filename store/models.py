@@ -50,6 +50,20 @@ class Order(models.Model):
 	def __str__(self):
 		return str(self.id)
 
+	# Add shipping method; Check if any items in cart are not digital
+	@property
+	def shipping(self):
+		# False by default
+		shipping = False
+		# Query all order items
+		orderitems = self.orderitem_set.all()
+		# Loop through items and check if any have digital == False
+		for i in orderitems:
+			if i.product.digital == False:
+				# Set shipping to True if items need to be shipped
+				shipping = True
+		return shipping
+
 	# Dynamically displays cart order total price
 	@property
 	def get_cart_total(self):

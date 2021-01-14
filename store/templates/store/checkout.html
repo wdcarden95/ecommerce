@@ -44,6 +44,8 @@
 
 		<div class="box-element hidden" id="payment-info">
 			<small>Paypal Options</small>
+			<!-- Add demo Payment button -->
+			<button id="make-payment">Make Payment</button>
 		</div>
 
 	</div>
@@ -67,5 +69,99 @@
 		</div>
 	</div>
 </div>
+
+<!-- get the status of “shipping” from our "order" object and remove the address field if shipping is false -->
+<script type="text/javascript">
+	var shipping = '{{order.shipping}}'
+	// Store cart total in a variable to use when checking out
+	var total = '{{order.get_cart_total}}'
+
+	if (shipping == 'False'){
+		document.getElementById('shipping-info').innerHTML = ''
+	}
+
+	// Hide user info wrapper if user is logged in
+	if (user != 'AnonymousUser'){
+	 	document.getElementById('user-info').innerHTML = ''
+	 }
+
+	if (shipping == 'False' && user != 'AnonymousUser'){
+		//Hide entire form if user is logged in and shipping is false
+		document.getElementById('form-wrapper').classList.add("hidden");
+		//Show payment if logged in user wants to buy an item that does not require shipping
+	  document.getElementById('payment-info').classList.remove("hidden");
+	}
+
+	// Hide button & open payment option on submit
+	var form = document.getElementById('form')
+	form.addEventListener('submit', function(e){
+		e.preventDefault()
+		console.log('Form Submitted...')
+		document.getElementById('form-button').classList.add("hidden");
+		document.getElementById('payment-info').classList.remove("hidden");
+	})
+
+	// Add event handler to payment-submit button and a function to trigger on submission
+	document.getElementById('make-payment').addEventListener('click', function(e){
+		submitFormData()
+	})
+
+	function submitFormData(){
+		console.log('Payment button clicked')
+
+		// object representation for user form data
+		var userFormData = {
+			'name':null,
+			'email':null,
+			'total':total,
+		}
+
+		// object representation for shipping info
+		var shippingInfo = {
+			'address':null,
+			'city':null,
+			'state':null,
+			'zipcode':null,
+		}
+
+		// if items need to be shipped, replace the null values with shipping info
+		if (shipping != 'False'){
+			shippingInfo.address = form.address.value
+	    	shippingInfo.city = form.city.value
+	    	shippingInfo.state = form.state.value
+	    	shippingInfo.zipcode = form.zipcode.value
+		}
+
+		// if user is not logged in, replace numm in user form data with the one they provide in the form
+		if (user == 'AnonymousUser'){
+			userFormData.name = form.name.value
+			userFormData.email = form.email.value
+		}
+
+		console.log('Shipping Info:', shippingInfo)
+		console.log('User Info:', userFormData)
+
+		// Set the url path to the process order page
+		var url = "/process_order/"
+		// Fetch csrf token, js post request object, user info, and shipping data
+		fetch(url, {
+			method:'POST',
+			headers:{
+				'Content-Type':'application/json',
+				'X-CSRFToken':csrftoken,
+			},
+			body:JSON.stringify({'form':userFormData, 'shipping':shippingInfo}),
+
+		// Once POST data is sent, send user back to home page in the promise
+		})
+		.then((response) => response.json())
+		.then((data) => {
+			  console.log('Success:', data);
+			  alert('Transaction completed');
+			  window.location.href = "{% url 'store' %}"
+
+			})
+	}
+</script>
 
 {% endblock content %}

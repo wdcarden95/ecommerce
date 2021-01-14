@@ -48,5 +48,7 @@ function updateUserOrder(productId, action){
   .then((data) => {
     // reload the page once our call returns as successful to see changes
     console.log('data', data)
+    // change in the future to use js so page doesn't have to reload
+    location.reload()
   });
 }

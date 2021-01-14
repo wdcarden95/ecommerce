@@ -10,4 +10,6 @@ urlpatterns = [
 
 	# Creates a path for the view of updateItem from cart.js to views.py
 	path('update_item/', views.updateItem, name="update_item"),
+
+	path('process_order/', views.processOrder, name="process_order"),
 ]
