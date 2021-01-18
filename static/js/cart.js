@@ -10,9 +10,10 @@ for(var i = 0; i < updateBtns.length; i++){
     console.log('productId:', productId, 'action:', action)
 
     // log to the console if the user adding items to cart is authenticated or not based on main.html
+    // Checks if the user is logged in (authenticated) or not logged in and calls different functions
     console.log('USER:', user)
     if (user == 'AnonymousUser'){
-      console.log('User is not authenticated')
+      addCookieItem(productId, action)
     }else{
       // call updateUserOrder if authenticated user adds items to cart
       updateUserOrder(productId, action)
@@ -51,4 +52,37 @@ function updateUserOrder(productId, action){
     // change in the future to use js so page doesn't have to reload
     location.reload()
   });
+}
+
+// For use with users not logged in to add cart items.
+function addCookieItem(productId, action){
+  console.log('User is not authenticated')
+
+  // If action is "add", check if item is in the cart
+  // If not, create it. If so, add to the quantity
+  if (action == 'add'){
+    if (cart[productId] == undefined){
+      cart[productId] = {'quantity':1}
+
+    }else{
+      cart[productId]['quantity'] += 1
+    }
+  }
+
+  // If action is "remove", decrease the quantity
+  // If quantity <= 0, remove it from the cart
+  if (action == 'remove'){
+    cart[productId]['quantity'] -= 1
+
+    if (cart[productId]['quantity'] <= 0){
+      console.log('Item should be deleted')
+      delete cart[productId];
+    }
+  }
+
+  // Update browser cookie: set and stringify cookie
+  console.log('CART:', cart)
+  document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
+
+  location.reload()
 }

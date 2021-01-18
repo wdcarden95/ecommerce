@@ -158,6 +158,12 @@
 		.then((data) => {
 			  console.log('Success:', data);
 			  alert('Transaction completed');
+
+				// To clear cart after checkout, set cart to an empty dictionary
+				// Must be done before sending user back to main page or the cart won't clear
+				cart = {}
+				document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
+
 			  window.location.href = "{% url 'store' %}"
 
 			})

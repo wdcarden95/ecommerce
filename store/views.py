@@ -10,25 +10,17 @@ from django.http import JsonResponse
 import json
 
 import datetime
+from .utils import cookieCart, cartData, guestOrder
 
 # Create your views here.
 
 def store(request):
-	# Add user data in store view
-	if request.user.is_authenticated:
-		customer = request.user.customer
-		# either create an order or get order if it exists
-		order, created = Order.objects.get_or_create(customer=customer, complete=False)
-		items = order.orderitem_set.all()
-		# Get cart item count for auth users
-		cartItems = order.get_cart_items
-	# else if user is not authenticated
-	else:
-		items = []
-		# Pass in shipping method for anon users and set default to False
-		order = {'get_cart_total':0, 'get_cart_items':0, 'shipping':False}
-		# Get cart item count for non-auth users
-		cartItems = order['get_cart_items']
+	# Call cartData from utils.py to display cart item count on page
+	data = cartData(request)
+
+	cartItems = data['cartItems']
+	order = data['order']
+	items = data['items']
 
 	products = Product.objects.all()
 	# Query cart item count
@@ -36,34 +28,21 @@ def store(request):
 	return render(request, 'store/store.html', context)
 
 def cart(request):
-	# checks authenticated user
-	if request.user.is_authenticated:
-		customer = request.user.customer
-		# either create an order or get order if it exists
-		order, created = Order.objects.get_or_create(customer=customer, complete=False)
-		items = order.orderitem_set.all()
-		cartItems = order.get_cart_items
-	# else if user is not authenticated
-	else:
-		items = []
-		order = {'get_cart_total':0, 'get_cart_items':0, 'shipping':False}
-		cartItems = order['get_cart_items']
+	data = cartData(request)
+
+	cartItems = data['cartItems']
+	order = data['order']
+	items = data['items']
 
 	context = {'items':items, 'order':order, 'cartItems':cartItems}
 	return render(request, 'store/cart.html', context)
 
 def checkout(request):
-	if request.user.is_authenticated:
-		customer = request.user.customer
-		# either create an order or get order if it exists
-		order, created = Order.objects.get_or_create(customer=customer, complete=False)
-		items = order.orderitem_set.all()
-		cartItems = order.get_cart_items
-	# else if user is not authenticated
-	else:
-		items = []
-		order = {'get_cart_total':0, 'get_cart_items':0, 'shipping':False}
-		cartItems = order['get_cart_items']
+	data = cartData(request)
+
+	cartItems = data['cartItems']
+	order = data['order']
+	items = data['items']
 
 	context = {'items':items, 'order':order, 'cartItems':cartItems}
 	return render(request, 'store/checkout.html', context)
@@ -113,26 +92,29 @@ def processOrder(request):
 		customer = request.user.customer
 		# get order
 		order, created = Order.objects.get_or_create(customer=customer, complete=False)
-		# get total
-		total = float(data['form']['total'])
-		# set order transaction id
-		order.transaction_id = transaction_id
 
-		# confirm total
-		if total == order.get_cart_total:
-			order.complete = True
-		order.save()
-
-		# if items are being shipped, create shipping address object 
-		if order.shipping == True:
-			ShippingAddress.objects.create(
-				customer=customer,
-				order=order,
-				address=data['shipping']['address'],
-				city=data['shipping']['city'],
-				state=data['shipping']['state'],
-				zipcode=data['shipping']['zipcode'],
-			)
 	else:
-		print('User is not logged in...')
+		customer, order = guestOrder(request, data)
+
+	# get total
+	total = float(data['form']['total'])
+	# set order transaction id
+	order.transaction_id = transaction_id
+
+	# confirm total
+	if total == order.get_cart_total:
+		order.complete = True
+	order.save()
+
+	# if items are being shipped, create shipping address object
+	if order.shipping == True:
+		ShippingAddress.objects.create(
+			customer=customer,
+			order=order,
+			address=data['shipping']['address'],
+			city=data['shipping']['city'],
+			state=data['shipping']['state'],
+			zipcode=data['shipping']['zipcode'],
+		)
+
 	return JsonResponse('Payment complete!', safe=False)

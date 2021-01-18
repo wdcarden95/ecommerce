@@ -35,6 +35,43 @@
           }
           var csrftoken = getToken('csrftoken');
 
+          // parse cookie
+          function getCookie(name) {
+              // Split cookie string and get all individual name=value pairs in an array
+              var cookieArr = document.cookie.split(";");
+
+              // Loop through the array elements
+              for(var i = 0; i < cookieArr.length; i++) {
+                  var cookiePair = cookieArr[i].split("=");
+
+                  /* Removing whitespace at the beginning of the cookie name
+                  and compare it with the given string */
+                  if(name == cookiePair[0].trim()) {
+                      // Decode the cookie value and return
+                      return decodeURIComponent(cookiePair[1]);
+                  }
+              }
+
+              // Return null if not found
+              return null;
+          }
+
+          // Create cookie called "cart"
+          var cart = JSON.parse(getCookie('cart'))
+
+          // Check status of cart cookie, then set cart to an empty js object and use document.cookie to set one
+          // Always want users to have an empty/available cart
+          // Check cookies in firefox with inspect element -> storage
+          if (cart == undefined){
+          	cart = {}
+          	console.log('Cart Created!', cart)
+            // sets cookie to browser's cookies
+            // create cookie with document.cookie, concatenate the cart object as a string
+            // and make sure cookie is set to single domain, the main website domain
+          	document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+          }
+          console.log('Cart:', cart)
+
         </script>
      </head>
 
