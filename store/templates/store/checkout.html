@@ -45,7 +45,9 @@
 		<div class="box-element hidden" id="payment-info">
 			<small>Paypal Options</small>
 			<!-- Add demo Payment button -->
-			<button id="make-payment">Make Payment</button>
+			<!-- Set up a container element for the button -->
+			<div id="paypal-button-container"></div>
+			<!-- <button id="make-payment">Make Payment</button> -->
 		</div>
 
 	</div>
@@ -70,11 +72,48 @@
 	</div>
 </div>
 
+<!-- Include the PayPal JavaScript SDK -->
+<!-- Add &disable-funding=credit to the end of the URL to disable Paypal CREDIT as an example -->
+<script src="https://www.paypal.com/sdk/js?client-id=AfN7mEipd-mHOWUhcy7OsIxXsQAoevTw-EzkQMucUuqYWJriuzwaiGLq810w3THNF3xQARo0U2ThsL1B&currency=USD&disable-funding=credit"></script>
+
+<script>
+	var total = '{{order.get_cart_total}}'
+  // Render the PayPal button into #paypal-button-container
+  paypal.Buttons({
+
+		// style buttons
+		style:{
+			color:'blue',
+			shape:'rect',
+		},
+
+      // Set up the transaction
+      createOrder: function(data, actions) {
+          return actions.order.create({
+              purchase_units: [{
+                  amount: {
+                      value: parseFloat(total).toFixed(2)
+                  }
+              }]
+          });
+      },
+
+      // Finalize the transaction
+			onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    // Show a success message to the buyer
+                    submitFormData()
+                });
+            }
+
+
+  }).render('#paypal-button-container');
+</script>
+
 <!-- get the status of “shipping” from our "order" object and remove the address field if shipping is false -->
 <script type="text/javascript">
 	var shipping = '{{order.shipping}}'
-	// Store cart total in a variable to use when checking out
-	var total = '{{order.get_cart_total}}'
+
 
 	if (shipping == 'False'){
 		document.getElementById('shipping-info').innerHTML = ''
@@ -100,11 +139,12 @@
 		document.getElementById('form-button').classList.add("hidden");
 		document.getElementById('payment-info').classList.remove("hidden");
 	})
-
+	/*
 	// Add event handler to payment-submit button and a function to trigger on submission
 	document.getElementById('make-payment').addEventListener('click', function(e){
 		submitFormData()
 	})
+	*/
 
 	function submitFormData(){
 		console.log('Payment button clicked')
@@ -132,7 +172,7 @@
 	    	shippingInfo.zipcode = form.zipcode.value
 		}
 
-		// if user is not logged in, replace numm in user form data with the one they provide in the form
+		// if user is not logged in, replace name in user form data with the one they provide in the form
 		if (user == 'AnonymousUser'){
 			userFormData.name = form.name.value
 			userFormData.email = form.email.value
